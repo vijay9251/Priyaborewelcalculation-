@@ -5,17 +5,18 @@
   <title>Admin Panel - Priya Borewell</title>
   <style>
     body { font-family: Arial; background: #f2f2f2; padding: 20px; }
-    .section { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; margin-bottom: 20px; }
+    .section { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; margin-bottom: 20px; }
     input, button { padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; }
     .btn { background-color: #007bff; color: white; border: none; cursor: pointer; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
     th { background-color: #007bff; color: white; }
     .hidden { display: none; }
   </style>
 </head>
 <body>
 
+<!-- Login Section -->
 <div class="section" id="loginSection">
   <h2>Admin Login</h2>
   <input type="text" id="username" placeholder="Username" />
@@ -23,7 +24,8 @@
   <button class="btn" onclick="login()">Login</button>
 </div>
 
-<div class="section hidden" id="dashboard">
+<!-- Dashboard Section -->
+<div class="section hidden" id="dashboardSection">
   <h2>Invoice Dashboard</h2>
   <table>
     <thead>
@@ -33,6 +35,7 @@
         <th>Products</th>
         <th>Total</th>
         <th>Advance</th>
+        <th>Paid</th>
         <th>Due</th>
         <th>Mode</th>
         <th>Received By</th>
@@ -40,7 +43,9 @@
         <th>Date</th>
       </tr>
     </thead>
-    <tbody id="invoiceTable"></tbody>
+    <tbody id="invoiceTable">
+      <!-- Firebase data will be loaded here -->
+    </tbody>
   </table>
 </div>
 
@@ -64,32 +69,30 @@
   const correctPassword = "Priya8084";
 
   const loginSection = document.getElementById("loginSection");
-  const dashboard = document.getElementById("dashboard");
-
-  function showDashboard() {
-    loginSection.classList.add("hidden");
-    dashboard.classList.remove("hidden");
-    localStorage.setItem("loggedIn", "true"); // Use localStorage to persist session
-    loadInvoices();
-  }
+  const dashboardSection = document.getElementById("dashboardSection");
+  const tableBody = document.getElementById("invoiceTable");
 
   function login() {
-    const user = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
-
-    if (user === correctUsername && pass === correctPassword) {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    if (username === correctUsername && password === correctPassword) {
+      localStorage.setItem("loggedIn", "true");
       showDashboard();
     } else {
-      alert("Invalid login");
+      alert("Invalid Login");
     }
   }
 
-  async function loadInvoices() {
-    const querySnapshot = await getDocs(collection(db, "invoice"));
-    const table = document.getElementById("invoiceTable");
-    table.innerHTML = "";
+  function showDashboard() {
+    loginSection.classList.add("hidden");
+    dashboardSection.classList.remove("hidden");
+    loadInvoices();
+  }
 
-    querySnapshot.forEach((doc) => {
+  async function loadInvoices() {
+    const snapshot = await getDocs(collection(db, "invoice"));
+    tableBody.innerHTML = "";
+    snapshot.forEach(doc => {
       const d = doc.data();
       const row = document.createElement("tr");
       row.innerHTML = `
@@ -98,21 +101,21 @@
         <td><pre>${d.productDetails}</pre></td>
         <td>₹${d.total}</td>
         <td>₹${d.advance}</td>
+        <td>₹${d.amountPaid}</td>
         <td>₹${d.due}</td>
         <td>${d.paymentMode}</td>
         <td>${d.receivedBy}</td>
         <td>${d.machineStartTime} - ${d.machineEndTime}</td>
         <td>${d.date}</td>
       `;
-      table.appendChild(row);
+      tableBody.appendChild(row);
     });
   }
 
-  // Check if already logged in on page load
+  // Check login on page load
   if (localStorage.getItem("loggedIn") === "true") {
     showDashboard();
   }
-
 </script>
 
 </body>
