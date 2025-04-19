@@ -2,63 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Priya Borewell - Invoice</title>
+  <title>Admin Panel - Priya Borewell</title>
   <style>
-    body { font-family: Arial; background: #f2f2f2; padding: 20px; }
-    .section { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; margin-bottom: 20px; }
-    input, select, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    body { font-family: Arial; padding: 20px; background-color: #f5f5f5; }
+    .login-box, .admin-box {
+      max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc;
+    }
+    input, button {
+      padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
     th { background-color: #007bff; color: white; }
     .hidden { display: none; }
-    .btn { background-color: #28a745; color: white; border: none; cursor: pointer; }
-    .btn-blue { background-color: #007bff; color: white; }
   </style>
 </head>
 <body>
 
-<div class="section" id="invoiceSection">
-  <h2>Priya Borewell Invoice</h2>
+<div class="login-box" id="loginBox">
+  <h2>Admin Login</h2>
+  <input type="text" id="adminId" placeholder="Enter Admin ID" />
+  <input type="password" id="adminPassword" placeholder="Enter Password" />
+  <button onclick="login()">Login</button>
+  <p id="errorMsg" style="color:red;"></p>
+</div>
 
-  <label>Machine Start Time</label>
-  <input type="number" id="startTime" placeholder="6047.11" step="any" />
-  <label>Machine End Time</label>
-  <input type="number" id="endTime" placeholder="6050.17" step="any" />
-  <input type="text" id="partyName" placeholder="Party Name" />
-  <input type="text" id="partyAddress" placeholder="Address" />
-
+<div class="admin-box hidden" id="adminPanel">
+  <h2>Invoice Dashboard</h2>
   <table>
-    <thead><tr><th>Item</th><th>Rate</th><th>Qty</th></tr></thead>
-    <tbody id="items">
-      <tr><td><input value="7 inch Casing" id="name1" /></td><td><input type="number" value="350" id="rate1" /></td><td><input type="number" value="0" id="qty1" /></td></tr>
-      <tr><td><input value="5 inch Casing" id="name2" /></td><td><input type="number" value="150" id="rate2" /></td><td><input type="number" value="0" id="qty2" /></td></tr>
-      <tr><td><input value="Boring" id="name3" /></td><td><input type="number" value="120" id="rate3" /></td><td><input type="number" value="0" id="qty3" /></td></tr>
-      <tr><td><input value="Extra Work" id="name4" /></td><td><input type="number" value="0" id="rate4" /></td><td><input type="number" value="0" id="qty4" /></td></tr>
-    </tbody>
+    <thead>
+      <tr>
+        <th>Party Name</th>
+        <th>Address</th>
+        <th>Total</th>
+        <th>Paid</th>
+        <th>Due</th>
+        <th>Date</th>
+        <th>Location</th>
+      </tr>
+    </thead>
+    <tbody id="invoiceData"></tbody>
   </table>
-
-  <input type="number" id="advance" placeholder="Advance Payment (₹)" />
-  <select id="paymentMode">
-    <option value="Cash">Cash</option>
-    <option value="Online">Online</option>
-  </select>
-  <input type="text" id="receivedBy" placeholder="Received By" />
-
-  <button class="btn" onclick="calculate()">Calculate</button>
-  <div id="output"></div>
-
-  <div id="finalInputs" class="hidden">
-    <input type="number" id="finalAmountPaid" placeholder="Total Amount Paid by Party (₹)" />
-    <p><strong>Due:</strong> ₹<span id="finalDue">0</span></p>
-    <button class="btn" onclick="saveData()">Save to Firebase</button>
-    <button class="btn-blue hidden" id="printBtn" onclick="printInvoice()">Print Invoice</button>
-  </div>
 </div>
 
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDuJAow6zpH992D3BY3tKndKuomGWKpguc",
@@ -71,136 +61,50 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  let finalTotal = 0;
 
-  window.calculate = () => {
-    finalTotal = 0;
-    let details = "";
-    for (let i = 1; i <= 4; i++) {
-      const name = document.getElementById(`name${i}`).value;
-      const rate = parseFloat(document.getElementById(`rate${i}`).value) || 0;
-      const qty = parseFloat(document.getElementById(`qty${i}`).value) || 0;
-      if (qty > 0) {
-        const amt = rate * qty;
-        finalTotal += amt;
-        details += `${name}: ₹${rate} x ${qty} = ₹${amt.toFixed(2)}\n`;
-      }
+  window.login = () => {
+    const id = document.getElementById("adminId").value;
+    const pass = document.getElementById("adminPassword").value;
+    const errorMsg = document.getElementById("errorMsg");
+
+    if (id === "Priyaborewel" && pass === "Priya8084") {
+      sessionStorage.setItem("loggedIn", "true");
+      document.getElementById("loginBox").classList.add("hidden");
+      document.getElementById("adminPanel").classList.remove("hidden");
+      loadData();
+    } else {
+      errorMsg.textContent = "Invalid ID or Password!";
     }
+  };
 
-    const advance = parseFloat(document.getElementById("advance").value) || 0;
-    const due = finalTotal - advance;
+  window.onload = () => {
+    if (sessionStorage.getItem("loggedIn") === "true") {
+      document.getElementById("loginBox").classList.add("hidden");
+      document.getElementById("adminPanel").classList.remove("hidden");
+      loadData();
+    }
+  };
 
-    document.getElementById("output").innerHTML = `
-      <p><strong>Calculated Total:</strong> ₹${finalTotal}</p>
-      <p><strong>Advance:</strong> ₹${advance}</p>
-      <p><strong>Due:</strong> ₹${due}</p>
-      <pre>${details}</pre>
-    `;
+  async function loadData() {
+    const querySnapshot = await getDocs(collection(db, "invoice"));
+    const tableBody = document.getElementById("invoiceData");
+    tableBody.innerHTML = "";
 
-    document.getElementById("finalInputs").classList.remove("hidden");
-
-    document.getElementById("finalAmountPaid").addEventListener("input", () => {
-      const paid = parseFloat(document.getElementById("finalAmountPaid").value) || 0;
-      document.getElementById("finalDue").innerText = (finalTotal - paid).toFixed(2);
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${data.partyName || ""}</td>
+        <td>${data.partyAddress || ""}</td>
+        <td>₹${data.total || 0}</td>
+        <td>₹${data.amountPaid || 0}</td>
+        <td>₹${data.due || 0}</td>
+        <td>${data.date || ""}</td>
+        <td><a href="https://www.google.com/maps?q=${data.location?.lat},${data.location?.lng}" target="_blank">Map</a></td>
+      `;
+      tableBody.appendChild(tr);
     });
-  };
-
-  window.saveData = async () => {
-    const paidAmount = parseFloat(document.getElementById("finalAmountPaid").value) || 0;
-    const due = finalTotal - paidAmount;
-
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-
-      const data = {
-        machineStartTime: document.getElementById("startTime").value,
-        machineEndTime: document.getElementById("endTime").value,
-        partyName: document.getElementById("partyName").value,
-        partyAddress: document.getElementById("partyAddress").value,
-        productDetails: document.getElementById("output").innerText,
-        total: finalTotal,
-        amountPaid: paidAmount,
-        due: due,
-        advance: parseFloat(document.getElementById("advance").value) || 0,
-        paymentMode: document.getElementById("paymentMode").value,
-        receivedBy: document.getElementById("receivedBy").value,
-        date: new Date().toLocaleString(),
-        location: {
-          lat: latitude,
-          lng: longitude
-        }
-      };
-
-      await addDoc(collection(db, "invoice"), data);
-
-      const itemLines = data.productDetails
-        .split("\n")
-        .filter(line => line.includes("= ₹"))
-        .map(line => "• " + line)
-        .join("\n");
-
-      const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-
-      const botToken = "7202755147:AAG-3IWl0PDQXshgkPEyn4qBkCJazygTLtE";
-      const chatId = "7398682108";
-
-      const message = `🧾 *New Invoice Saved!*
-
-👤 *Party:* ${data.partyName}
-📍 *Address:* ${data.partyAddress}
-🛠️ *Machine Time:* ${data.machineStartTime} - ${data.machineEndTime}
-
-📦 *Items:*
-${itemLines}
-
-💰 *Total:* ₹${data.total}
-💵 *Paid:* ₹${data.amountPaid}
-📉 *Due:* ₹${data.due}
-💳 *Mode:* ${data.paymentMode}
-👤 *Received By:* ${data.receivedBy}
-📅 *Date:* ${data.date}
-📌 *Location:* [Google Map](${mapLink})`;
-
-      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-          parse_mode: "Markdown"
-        })
-      });
-
-      alert("Invoice saved with location & sent to Telegram!");
-      document.getElementById("printBtn").classList.remove("hidden");
-    });
-  };
-
-  window.printInvoice = () => {
-    const party = document.getElementById("partyName").value;
-    const address = document.getElementById("partyAddress").value;
-    const start = document.getElementById("startTime").value;
-    const end = document.getElementById("endTime").value;
-    const items = document.getElementById("output").innerText;
-    const paid = document.getElementById("finalAmountPaid").value;
-    const receivedBy = document.getElementById("receivedBy").value;
-
-    const printContent = `
-      <h2>Priya Borewell Invoice</h2>
-      <p><strong>Party:</strong> ${party}</p>
-      <p><strong>Address:</strong> ${address}</p>
-      <p><strong>Machine Time:</strong> ${start} - ${end}</p>
-      <pre>${items}</pre>
-      <p><strong>Paid:</strong> ₹${paid}</p>
-      <p><strong>Received By:</strong> ${receivedBy}</p>
-    `;
-
-    const win = window.open("", "", "width=900,height=600");
-    win.document.write(`<html><head><title>Invoice</title></head><body>${printContent}</body></html>`);
-    win.document.close();
-    win.print();
-  };
+  }
 </script>
 
 </body>
