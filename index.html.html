@@ -76,17 +76,12 @@
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
     if (username === correctUsername && password === correctPassword) {
-      localStorage.setItem("loggedIn", "true");
-      showDashboard();
+      loginSection.classList.add("hidden");
+      dashboardSection.classList.remove("hidden");
+      loadInvoices();
     } else {
       alert("Invalid Login");
     }
-  }
-
-  function showDashboard() {
-    loginSection.classList.add("hidden");
-    dashboardSection.classList.remove("hidden");
-    loadInvoices();
   }
 
   async function loadInvoices() {
@@ -110,11 +105,6 @@
       `;
       tableBody.appendChild(row);
     });
-  }
-
-  // Check login on page load
-  if (localStorage.getItem("loggedIn") === "true") {
-    showDashboard();
   }
 </script>
 
