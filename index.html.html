@@ -4,48 +4,55 @@
   <meta charset="UTF-8" />
   <title>Admin Panel - Priya Borewell</title>
   <style>
-    body { font-family: Arial; padding: 20px; background-color: #f5f5f5; }
-    .login-box, .admin-box {
-      max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc;
+    body { font-family: Arial; background: #f2f2f2; margin: 0; padding: 0; }
+    .login-box, .data-box {
+      max-width: 800px; margin: 50px auto; background: #fff;
+      padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    input, button {
-      padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box;
-    }
+    input, button { width: 100%; padding: 10px; margin: 10px 0; }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    th { background-color: #007bff; color: white; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #007bff; color: white; }
     .hidden { display: none; }
+    h2 { margin-top: 0; }
   </style>
 </head>
 <body>
 
 <div class="login-box" id="loginBox">
   <h2>Admin Login</h2>
-  <input type="text" id="adminId" placeholder="Enter Admin ID" />
-  <input type="password" id="adminPassword" placeholder="Enter Password" />
+  <input type="text" id="adminUser" placeholder="Username" />
+  <input type="password" id="adminPass" placeholder="Password" />
   <button onclick="login()">Login</button>
-  <p id="errorMsg" style="color:red;"></p>
 </div>
 
-<div class="admin-box hidden" id="adminPanel">
-  <h2>Invoice Dashboard</h2>
-  <table>
+<div class="data-box hidden" id="dataBox">
+  <h2>Invoice Records</h2>
+  <table id="invoiceTable">
     <thead>
       <tr>
-        <th>Party Name</th>
+        <th>Date</th>
+        <th>Party</th>
         <th>Address</th>
+        <th>Machine Time</th>
+        <th>Items</th>
         <th>Total</th>
         <th>Paid</th>
         <th>Due</th>
-        <th>Date</th>
+        <th>Advance</th>
+        <th>Payment Mode</th>
+        <th>Received By</th>
         <th>Location</th>
       </tr>
     </thead>
-    <tbody id="invoiceData"></tbody>
+    <tbody id="tableBody">
+      <!-- Data comes here -->
+    </tbody>
   </table>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase & Admin Script -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
   import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -62,47 +69,43 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  window.login = () => {
-    const id = document.getElementById("adminId").value;
-    const pass = document.getElementById("adminPassword").value;
-    const errorMsg = document.getElementById("errorMsg");
-
-    if (id === "Priyaborewel" && pass === "Priya8084") {
-      sessionStorage.setItem("loggedIn", "true");
+  window.login = async () => {
+    const user = document.getElementById("adminUser").value;
+    const pass = document.getElementById("adminPass").value;
+    if (user === "Priyaborewel" && pass === "Priya8084") {
       document.getElementById("loginBox").classList.add("hidden");
-      document.getElementById("adminPanel").classList.remove("hidden");
+      document.getElementById("dataBox").classList.remove("hidden");
       loadData();
     } else {
-      errorMsg.textContent = "Invalid ID or Password!";
-    }
-  };
-
-  window.onload = () => {
-    if (sessionStorage.getItem("loggedIn") === "true") {
-      document.getElementById("loginBox").classList.add("hidden");
-      document.getElementById("adminPanel").classList.remove("hidden");
-      loadData();
+      alert("Invalid login credentials");
     }
   };
 
   async function loadData() {
     const querySnapshot = await getDocs(collection(db, "invoice"));
-    const tableBody = document.getElementById("invoiceData");
+    const tableBody = document.getElementById("tableBody");
     tableBody.innerHTML = "";
 
-    querySnapshot.forEach(doc => {
+    querySnapshot.forEach((doc) => {
       const data = doc.data();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${data.partyName || ""}</td>
-        <td>${data.partyAddress || ""}</td>
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${data.date || ''}</td>
+        <td>${data.partyName || ''}</td>
+        <td>${data.partyAddress || ''}</td>
+        <td>${data.machineStartTime || ''} - ${data.machineEndTime || ''}</td>
+        <td><pre style="white-space: pre-wrap;">${data.productDetails || ''}</pre></td>
         <td>₹${data.total || 0}</td>
         <td>₹${data.amountPaid || 0}</td>
         <td>₹${data.due || 0}</td>
-        <td>${data.date || ""}</td>
-        <td><a href="https://www.google.com/maps?q=${data.location?.lat},${data.location?.lng}" target="_blank">Map</a></td>
+        <td>₹${data.advance || 0}</td>
+        <td>${data.paymentMode || ''}</td>
+        <td>${data.receivedBy || ''}</td>
+        <td>
+          ${data.location ? `<a href="https://www.google.com/maps?q=${data.location.lat},${data.location.lng}" target="_blank">Map</a>` : 'N/A'}
+        </td>
       `;
-      tableBody.appendChild(tr);
+      tableBody.appendChild(row);
     });
   }
 </script>
